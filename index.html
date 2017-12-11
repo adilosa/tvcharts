@@ -1,0 +1,34 @@
+<html>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g=" crossorigin="anonymous"></script>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.167.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.6/pako_inflate.min.js"></script>
+    <script>
+        var series = {};
+
+        $(document).ready(function() {
+            var tconst = new URLSearchParams(window.location.search).get("tconst");
+
+
+            s3 = new AWS.S3({apiVersion: '2006-03-01'});
+            s3.makeUnauthenticatedRequest(
+                'listObjects',
+                { Bucket: "tvcharts", Prefix: "output/00003/part=" + tconst.substring(2,5) },
+                function(err, data) {
+                  if (err) console.log(err, err.stack);
+                  else {
+                    var xhr = new XMLHttpRequest();
+                    xhr.onload = function(e) {if (this.status == 200) {
+                        this.responseText.trim().split(/\n/).map(JSON.parse).forEach(r => series[r.tconst] = r);
+                        document.write(JSON.stringify(series[tconst]));
+
+                    }}
+                    xhr.open("GET", "https://s3-us-west-2.amazonaws.com/tvcharts/" + data["Contents"][0]["Key"]);
+                    xhr.send()
+                  }
+                }
+            );
+        });
+    </script>
+    <body>
+    </body>
+</html>
