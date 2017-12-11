@@ -2,25 +2,28 @@
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g=" crossorigin="anonymous"></script>
     <script src="https://sdk.amazonaws.com/js/aws-sdk-2.167.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.6/pako_inflate.min.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
     <script>
-        var series = {};
+        var tconst = new URLSearchParams(window.location.search).get("tconst");
 
         $(document).ready(function() {
-            var tconst = new URLSearchParams(window.location.search).get("tconst");
-
-
             s3 = new AWS.S3({apiVersion: '2006-03-01'});
             s3.makeUnauthenticatedRequest(
                 'listObjects',
-                { Bucket: "tvcharts", Prefix: "output/00003/part=" + tconst.substring(2,5) },
+                { Bucket: "tvcharts", Prefix: "output/00004/part=" + tconst.substring(2,5) },
                 function(err, data) {
                   if (err) console.log(err, err.stack);
                   else {
                     var xhr = new XMLHttpRequest();
                     xhr.onload = function(e) {if (this.status == 200) {
-                        this.responseText.trim().split(/\n/).map(JSON.parse).forEach(r => series[r.tconst] = r);
-                        document.write(JSON.stringify(series[tconst]));
-
+                        resp = this.response
+                        series = this.response.trim().split(/\n/)
+                            .map(JSON.parse)
+                            .find(r => r["tconst"] == tconst)
+                        series['episodes'] = series['episodes'].sort(
+                            (a, b) => a[12] - b[12] || a[13] - b[13]
+                        );
+                        plotChart(series);
                     }}
                     xhr.open("GET", "https://s3-us-west-2.amazonaws.com/tvcharts/" + data["Contents"][0]["Key"]);
                     xhr.send()
@@ -28,7 +31,57 @@
                 }
             );
         });
+
+        function plotChart(series) {
+            Highcharts.chart('chart', {
+                chart: { type: 'scatter' },
+                title: { text: series['series'][3] },
+                xAxis: {
+                    min: 0,
+                    title: { text: 'Episodes' },
+                    startOnTick: true,
+                    endOnTick: true,
+                    showLastLabel: true,
+                    gridLineWidth: 0,
+                    tickWidth: 0,
+                    labels: { enabled: false }
+                },
+                yAxis: {
+                    max: 10,
+                    title: { text: 'IMDb Rating' }
+                },
+                legend: { enabled: false },
+                tooltip: {
+                    formatter: function() {
+                        return [
+                            "<b>S", this.point.season, "E", this.point.episode, "</b>", "<br>",
+                            this.point.name, "<br>",
+                            "Rating: ", this.point.rating || 0.0, "<br>",
+                            "Votes: ", this.point.votes || 0
+                        ].join("")
+                    }
+                },
+                series: [
+                    {
+                        name: 'Episodes',
+                        data: series['episodes'].map(
+                            e => {
+                                return {
+                                    'name': e[3],
+                                    'season': e[12],
+                                    'episode': e[13],
+                                    'rating': e[9] || 0,
+                                    'votes': e[10],
+                                    'y': parseFloat(e[9] || 0)
+                                }
+                            }
+                        )
+                    }
+                ]
+            });
+        }
     </script>
     <body>
+        <div id="chart"></div>
     </body>
 </html>
