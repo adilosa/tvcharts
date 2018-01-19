@@ -10,8 +10,10 @@ $(document).ready(function() {
           else {
             var xhr = new XMLHttpRequest();
             xhr.onload = function(e) {if (this.status == 200) {
-                resp = this.response
-                series = this.response.trim().split(/\n/)
+                var blob =
+                series = pako.inflate(
+                    new Uint8Array(xhr.response), { to: "string"}
+                ).trim().split(/\n/)
                     .map(JSON.parse)
                     .find(r => r["tconst"] == tconst)
                 series['episodes'] = series['episodes'].sort(
@@ -20,6 +22,7 @@ $(document).ready(function() {
                 plotChart(series);
             }}
             xhr.open("GET", "https://s3-us-west-2.amazonaws.com/tvcharts/" + data["Contents"][0]["Key"]);
+            xhr.responseType = "arraybuffer";
             xhr.send()
           }
         }
