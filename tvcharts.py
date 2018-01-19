@@ -17,6 +17,13 @@ episode = read(sys.argv[1], "title.episode.tsv.gz")
 ratings = read(sys.argv[1], "title.ratings.tsv.gz")
 
 
+titles.filter(col("titleType") == "tvSeries")\
+    .select("tconst", "primaryTitle")\
+    .write\
+    .option("compresion", "gzip")\
+    .csv(sys.argv[2] + "/series_title_index")
+
+
 rated_titles = titles.join(ratings, "tconst", "left")
 
 series = rated_titles.filter(col("titleType") == "tvSeries")\
@@ -35,4 +42,4 @@ series\
     .write\
     .option("compression", "gzip")\
     .partitionBy("part")\
-    .json(sys.argv[2])
+    .json(sys.argv[2] + "/series_ratings")

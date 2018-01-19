@@ -4,13 +4,41 @@ $(document).ready(function() {
     s3 = new AWS.S3({apiVersion: '2006-03-01'});
     s3.makeUnauthenticatedRequest(
         'listObjects',
-        { Bucket: "tvcharts", Prefix: "output/00004/part=" + tconst.substring(2,5) },
+        { Bucket: "tvcharts", Prefix: "output/00006/series_title_index/part" },
+        function(err, data) {
+          if (err) console.log(err, err.stack);
+          else {
+            var xhr = new XMLHttpRequest();
+            xhr.onload = function(e) {
+                if (xhr.readyState == xhr.DONE && this.status == 200) {
+                    titles = xhr.responseText
+                        .split("\n")
+                        .map(s => s.split(","))
+                        .map(s => { return { value: s[0], label: s[1] }})
+                    $("#title").autocomplete({
+                        minLength: 3,
+                        source: titles,
+                        select: function(event, ui) {
+                            window.location.href = "?tconst=" + ui.item.value;
+                            return false;
+                        }
+                    });
+                }
+            }
+            xhr.open("GET", "https://s3-us-west-2.amazonaws.com/tvcharts/" + data["Contents"][0]["Key"]);
+            xhr.responseType = "text";
+            xhr.send()
+          }
+        }
+    );
+    s3.makeUnauthenticatedRequest(
+        'listObjects',
+        { Bucket: "tvcharts", Prefix: "output/00006/series_ratings/part=" + tconst.substring(2,5) },
         function(err, data) {
           if (err) console.log(err, err.stack);
           else {
             var xhr = new XMLHttpRequest();
             xhr.onload = function(e) {if (this.status == 200) {
-                var blob =
                 series = pako.inflate(
                     new Uint8Array(xhr.response), { to: "string"}
                 ).trim().split(/\n/)
@@ -32,7 +60,7 @@ $(document).ready(function() {
 function plotChart(series) {
     Highcharts.chart('chart', {
         chart: { type: 'scatter' },
-        title: { text: series['series'][3] },
+        title: { text: series['series'][3] + " (" + series['series'][9] + ")" },
         xAxis: {
             min: 0,
             title: { text: 'Episodes' },
