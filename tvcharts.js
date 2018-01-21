@@ -12,12 +12,16 @@ $(document).ready(function() {
             xhr.onload = function(e) {
                 if (xhr.readyState == xhr.DONE && this.status == 200) {
                     titles = xhr.responseText
-                        .split("\n")
-                        .map(s => s.split(","))
-                        .map(s => { return { value: s[0], label: s[1] }})
+                    .split("\n")
+                    .map(s => s.split(","))
+                    .map(s => { return { value: s[0], label: s[1] }})
                     $("#title").autocomplete({
                         minLength: 3,
-                        source: titles,
+                        delay: 0,
+                        source: function(request, response) {
+                            var results = $.ui.autocomplete.filter(titles, request.term);
+                            response(results.slice(0, 10));
+                        },
                         select: function(event, ui) {
                             window.location.href = "?tconst=" + ui.item.value;
                             return false;
@@ -28,8 +32,8 @@ $(document).ready(function() {
             xhr.open("GET", "https://s3-us-west-2.amazonaws.com/tvcharts/" + data["Contents"][0]["Key"]);
             xhr.responseType = "text";
             xhr.send()
-          }
         }
+    }
     );
     s3.makeUnauthenticatedRequest(
         'listObjects',
@@ -38,22 +42,20 @@ $(document).ready(function() {
           if (err) console.log(err, err.stack);
           else {
             var xhr = new XMLHttpRequest();
-            xhr.onload = function(e) {if (this.status == 200) {
-                series = pako.inflate(
-                    new Uint8Array(xhr.response), { to: "string"}
-                ).trim().split(/\n/)
-                    .map(JSON.parse)
-                    .find(r => r["tconst"] == tconst)
-                series['episodes'] = series['episodes'].sort(
-                    (a, b) => a[12] - b[12] || a[13] - b[13]
-                );
-                plotChart(series);
-            }}
+            xhr.onload = function(e) {
+                if (this.status == 200) {
+                    series = pako.inflate(
+                        new Uint8Array(xhr.response), { to: "string"}
+                    ).trim().split(/\n/).map(JSON.parse).find(r => r["tconst"] == tconst)
+                    series['episodes'] = series['episodes'].sort((a, b) => a[12] - b[12] || a[13] - b[13]);
+                    plotChart(series);
+                }
+            }
             xhr.open("GET", "https://s3-us-west-2.amazonaws.com/tvcharts/" + data["Contents"][0]["Key"]);
             xhr.responseType = "arraybuffer";
             xhr.send()
-          }
         }
+    }
     );
 });
 
