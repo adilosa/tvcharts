@@ -12,21 +12,35 @@ $(document).ready(function() {
             xhr.onload = function(e) {
                 if (xhr.readyState == xhr.DONE && this.status == 200) {
                     titles = xhr.responseText
-                    .split("\n")
-                    .map(s => s.split(","))
-                    .map(s => { return { value: s[0], label: s[1] }})
-                    $("#title").autocomplete({
-                        minLength: 3,
-                        delay: 0,
-                        source: function(request, response) {
-                            var results = $.ui.autocomplete.filter(titles, request.term);
-                            response(results.slice(0, 10));
-                        },
-                        select: function(event, ui) {
-                            window.location.href = "?tconst=" + ui.item.value;
-                            return false;
-                        }
+                        .split("\n")
+                        .map(s => s.split(","))
+                        .map(s => { return { tconst: s[0], title: s[1] }})
+                    bloodhound = new Bloodhound({
+                      datumTokenizer: Bloodhound.tokenizers.obj.whitespace('title'),
+                      queryTokenizer: Bloodhound.tokenizers.whitespace,
+                      local: titles
                     });
+                    bloodhound.initialize();
+                    $('#bloodhound .typeahead').typeahead(
+                        {
+                          hint: true,
+                          highlight: true,
+                          minLength: 1
+                        },
+                        {
+                          name: 'titles',
+                          displayKey: 'title',
+                          source: bloodhound.ttAdapter(),
+                          templates: {
+                              empty: [
+                                  '<div class="empty-message">',
+                                      'unable to find any results that match the current query',
+                                  '</div>'
+                              ].join('\n'),
+                              suggestion: data => '<p><a href="?tconst=' + data.tconst + '">' + data.title + '</a></p>'
+                          }
+                        }
+                    );
                 }
             }
             xhr.open("GET", "https://s3-us-west-2.amazonaws.com/tvcharts/" + data["Contents"][0]["Key"]);
