@@ -20,7 +20,6 @@ $(document).ready(function() {
                       queryTokenizer: Bloodhound.tokenizers.whitespace,
                       local: titles
                     });
-                    bloodhound.initialize();
                     $('#bloodhound .typeahead').typeahead(
                         {
                           hint: true,
