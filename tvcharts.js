@@ -42,11 +42,11 @@ $(document).ready(function() {
                     );
                 }
             }
-            xhr.open("GET", "https://s3-us-west-2.amazonaws.com/tvcharts/" + data["Contents"][0]["Key"]);
+            xhr.open("GET", "https://s3-us-west-2.amazonaws.com/tvcharts/" + data["Contents"][0]["Key"], true);
             xhr.responseType = "text";
             xhr.send()
+          }
         }
-    }
     );
     s3.makeUnauthenticatedRequest(
         'listObjects',
@@ -64,11 +64,11 @@ $(document).ready(function() {
                     plotChart(series);
                 }
             }
-            xhr.open("GET", "https://s3-us-west-2.amazonaws.com/tvcharts/" + data["Contents"][0]["Key"]);
+            xhr.open("GET", "https://s3-us-west-2.amazonaws.com/tvcharts/" + data["Contents"][0]["Key"], true);
             xhr.responseType = "arraybuffer";
             xhr.send()
+          }
         }
-    }
     );
 });
 
