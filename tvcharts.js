@@ -37,7 +37,6 @@ $(document).ready(function() {
         function(err, data) {
             if (err) console.log(err, err.stack);
             else {
-                console.log("Loading search index...");
                 bloodhound = new Bloodhound({
                     datumTokenizer: Bloodhound.tokenizers.obj.whitespace('title'),
                     queryTokenizer: Bloodhound.tokenizers.whitespace,
@@ -77,19 +76,27 @@ $(document).ready(function() {
                                 '<div class="empty-message">',
                                     'unable to find any results that match the current query',
                                 '</div>'
-                            ].join('\n'),
-                            suggestion: data => '<p><a href="javascript:loadSeries(\"' + data.tconst + '\"");">' + data.title + '</a></p>'
+                            ].join('\n')
                         }
                     }
                 ).bind('typeahead:select', function(ev, suggestion) {
-                    loadSeries(suggestion['tconst']);
+                    gotoSeries(suggestion['tconst']);
                     $("#bloodhound .typeahead").typeahead('close');
                 });
             }
         }
     );
-    loadSeries(new URLSearchParams(window.location.search).get("tconst"));
+    window.onpopstate = function(event) {
+        console.log(event);
+        loadSeries(event.state.tconst);
+    };
+    gotoSeries(new URLSearchParams(window.location.search).get("tconst"));
 });
+
+function gotoSeries(tconst) {
+    history.pushState({tconst: tconst}, "", "index.html?tconst=" + tconst);
+    loadSeries(tconst);
+}
 
 function loadSeries(tconst) {
     chart.showLoading();
@@ -119,7 +126,8 @@ function loadSeries(tconst) {
 
 function plotChart(series) {
     chart.hideLoading();
-    chart.setTitle({text: series['series'][3] + " (" + series['series'][9] + ")"});
+    chart.setTitle({text: series['series'][3]});
+    chart.setSubtitle({text: series['series'][9] + "/10.0  " + series['series'][10]});
     chart.series[0].setData(
         series['episodes'].map(
             e => {
