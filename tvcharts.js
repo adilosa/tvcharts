@@ -78,7 +78,7 @@ $(document).ready(function() {
                                     'unable to find any results that match the current query',
                                 '</div>'
                             ].join('\n'),
-                            suggestion: data => '<p><a href="?tconst=' + data.tconst + '">' + data.title + '</a></p>'
+                            suggestion: data => '<p><a href="javascript:loadSeries(\"' + data.tconst + '\"");">' + data.title + '</a></p>'
                         }
                     }
                 ).bind('typeahead:select', function(ev, suggestion) {
