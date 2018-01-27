@@ -33,7 +33,7 @@ $(document).ready(function() {
     s3 = new AWS.S3({apiVersion: '2006-03-01'});
     s3.makeUnauthenticatedRequest(
         'listObjects',
-        { Bucket: "tvcharts", Prefix: "output/00006/series_title_index/part" },
+        { Bucket: "tvcharts", Prefix: "output/20180127T052230/series_title_index/part" },
         function(err, data) {
             if (err) console.log(err, err.stack);
             else {
@@ -87,7 +87,6 @@ $(document).ready(function() {
         }
     );
     window.onpopstate = function(event) {
-        console.log(event);
         loadSeries(event.state.tconst);
     };
     gotoSeries(new URLSearchParams(window.location.search).get("tconst"));
@@ -102,7 +101,7 @@ function loadSeries(tconst) {
     chart.showLoading();
     s3.makeUnauthenticatedRequest(
         'listObjects',
-        { Bucket: "tvcharts", Prefix: "output/00006/series_ratings/part=" + tconst.substring(2,5) },
+        { Bucket: "tvcharts", Prefix: "output/20180127T052230/series_ratings/part=" + tconst.substring(2,5) },
         function(err, data) {
             if (err) console.log(err, err.stack);
             else {
