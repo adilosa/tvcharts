@@ -1,4 +1,5 @@
 import sys
+import time
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, collect_list, array
 
@@ -16,12 +17,14 @@ titles = read(sys.argv[1], "title.basics.tsv.gz")
 episode = read(sys.argv[1], "title.episode.tsv.gz")
 ratings = read(sys.argv[1], "title.ratings.tsv.gz")
 
+out = sys.argv[2] + "/" + time.strftime("%Y%m%dT%H%M%S")
+
 
 titles.filter(col("titleType") == "tvSeries")\
     .select("tconst", "primaryTitle")\
     .write\
     .option("compresion", "gzip")\
-    .csv(sys.argv[2] + "/series_title_index")
+    .csv(out + "/series_title_index")
 
 
 rated_titles = titles.join(ratings, "tconst", "left")
@@ -42,4 +45,4 @@ series\
     .write\
     .option("compression", "gzip")\
     .partitionBy("part")\
-    .json(sys.argv[2] + "/series_ratings")
+    .json(out + "/series_ratings")
