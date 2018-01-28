@@ -130,7 +130,7 @@ function plotChart(series) {
         {text: "<pre>" + series['series'][9] + "/10.0 " + parseInt(series['series'][10]).toLocaleString() + "</pre>"}
     );
     chart.series[0].setData(
-        series['episodes'].map(
+        data = series['episodes'].map(
             e => {
                 return {
                     'name': e[3],
@@ -138,9 +138,12 @@ function plotChart(series) {
                     'episode': e[13],
                     'rating': e[9] || 0,
                     'votes': e[10],
-                    'y': parseFloat(e[9] || 0)
+                    'y': parseFloat(e[9] || 0),
+                    'colorIndex': parseInt(e[12] - 1)
                 }
             }
-        )
+        ).filter(e => e.votes > 0)
+        .filter(e => e.season != "\\N" && e.episode != "\\N")
+        .sort((a, b) => parseInt(a.season) - parseInt(b.season) || parseInt(a.episode) - parseInt(b.episodes))
     );
 }
