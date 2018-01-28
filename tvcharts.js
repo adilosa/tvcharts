@@ -125,8 +125,10 @@ function loadSeries(tconst) {
 
 function plotChart(series) {
     chart.hideLoading();
-    chart.setTitle({text: series['series'][3]});
-    chart.setSubtitle({text: series['series'][9] + "/10.0  " + series['series'][10]});
+    chart.setTitle(
+        {text: '<a href="https://www.imdb.com/title/' + series['series'][0] + '" target="_blank">' + series['series'][3] + '</a>'},
+        {text: "<pre>" + series['series'][9] + "/10.0 " + parseInt(series['series'][10]).toLocaleString() + "</pre>"}
+    );
     chart.series[0].setData(
         series['episodes'].map(
             e => {
