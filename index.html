@@ -9,99 +9,127 @@
   <link rel="shortcut icon" href="about:blank">
   <title>TVCharts</title>
   <style>
-    body {
-      background: #212529;
-    }
+  html {
+    position: relative;
+    min-height: 100%;
+  }
 
-    span.twitter-typeahead .tt-menu {
-      cursor: pointer;
-    }
+  body {
+    background: #212529;
+    margin-bottom: 60px;
+  }
 
-    .dropdown-menu, span.twitter-typeahead .tt-menu {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      z-index: 1000;
-      display: none;
-      float: left;
-      min-width: 160px;
-      padding: 5px 0;
-      margin: 2px 0 0;
-      font-size: 1rem;
-      color: #373a3c;
-      text-align: left;
-      list-style: none;
-      background-color: #fff;
-      background-clip: padding-box;
-      border: 1px solid rgba(0, 0, 0, 0.15);
-      border-radius: 0.25rem;
-    }
+  .footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    /* Set the fixed height of the footer here */
+    height: 60px;
+    line-height: 60px; /* Vertically center the text there */
+  }
 
-    span.twitter-typeahead .tt-suggestion {
-      display: block;
-      width: 100%;
-      padding: 3px 20px;
-      clear: both;
-      font-weight: normal;
-      line-height: 1.5;
-      color: #373a3c;
-      text-align: inherit;
-      white-space: nowrap;
-      background: none;
-      border: 0;
-    }
+  span.twitter-typeahead .tt-menu {
+    cursor: pointer;
+  }
 
-    span.twitter-typeahead .tt-suggestion:focus, .dropdown-item:hover, span.twitter-typeahead .tt-suggestion:hover {
-      color: #2b2d2f;
-      text-decoration: none;
-      background-color: #f5f5f5;
-    }
+  .dropdown-menu, span.twitter-typeahead .tt-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    display: none;
+    float: left;
+    min-width: 160px;
+    padding: 5px 0;
+    margin: 2px 0 0;
+    font-size: 1rem;
+    color: #373a3c;
+    text-align: left;
+    list-style: none;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 0.25rem;
+  }
 
-    span.twitter-typeahead .active.tt-suggestion, span.twitter-typeahead .tt-suggestion.tt-cursor, span.twitter-typeahead .active.tt-suggestion:focus, span.twitter-typeahead .tt-suggestion.tt-cursor:focus, span.twitter-typeahead .active.tt-suggestion:hover, span.twitter-typeahead .tt-suggestion.tt-cursor:hover {
-        color: #fff;
-        text-decoration: none;
-        background-color: #0275d8;
-        outline: 0;
-    }
+  span.twitter-typeahead .tt-suggestion {
+    display: block;
+    width: 100%;
+    padding: 3px 20px;
+    clear: both;
+    font-weight: normal;
+    line-height: 1.5;
+    color: #373a3c;
+    text-align: inherit;
+    white-space: nowrap;
+    background: none;
+    border: 0;
+  }
 
-    span.twitter-typeahead .disabled.tt-suggestion, span.twitter-typeahead .disabled.tt-suggestion:focus, span.twitter-typeahead .disabled.tt-suggestion:hover {
-        color: #818a91;
-    }
+  span.twitter-typeahead .tt-suggestion:focus, .dropdown-item:hover, span.twitter-typeahead .tt-suggestion:hover {
+    color: #2b2d2f;
+    text-decoration: none;
+    background-color: #f5f5f5;
+  }
 
-    span.twitter-typeahead .disabled.tt-suggestion:focus, span.twitter-typeahead .disabled.tt-suggestion:hover {
-      text-decoration: none;
-      cursor: not-allowed;
-      background-color: transparent;
-      background-image: none;
-    }
+  span.twitter-typeahead .active.tt-suggestion, span.twitter-typeahead .tt-suggestion.tt-cursor, span.twitter-typeahead .active.tt-suggestion:focus, span.twitter-typeahead .tt-suggestion.tt-cursor:focus, span.twitter-typeahead .active.tt-suggestion:hover, span.twitter-typeahead .tt-suggestion.tt-cursor:hover {
+    color: #fff;
+    text-decoration: none;
+    background-color: #0275d8;
+    outline: 0;
+  }
 
-    span.twitter-typeahead {
-      width: 100%;
-    }
+  span.twitter-typeahead .disabled.tt-suggestion, span.twitter-typeahead .disabled.tt-suggestion:focus, span.twitter-typeahead .disabled.tt-suggestion:hover {
+    color: #818a91;
+  }
 
-    .input-group span.twitter-typeahead {
-      display: block !important;
-    }
+  span.twitter-typeahead .disabled.tt-suggestion:focus, span.twitter-typeahead .disabled.tt-suggestion:hover {
+    text-decoration: none;
+    cursor: not-allowed;
+    background-color: transparent;
+    background-image: none;
+  }
 
-    .input-group span.twitter-typeahead .tt-menu {
-      top: 2.375rem !important;
-    }
+  span.twitter-typeahead {
+    width: 100%;
+  }
 
-    #bloodhound .tt-menu {
-      max-height: 150px;
-      overflow-y: auto;
-    }
-  </style>
+  .input-group span.twitter-typeahead {
+    display: block !important;
+  }
+
+  .input-group span.twitter-typeahead .tt-menu {
+    top: 2.375rem !important;
+  }
+
+  #bloodhound .tt-menu {
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  #chart {
+    height: 100%;
+  }
+</style>
 </head>
 <body class="text-center">
-  <main role="main" class="container-fluid pt-3">
-    <form>
-      <div id="bloodhound" class="form-group">
-        <input class="typeahead form-control" type="text" placeholder="Series Title">
-      </div>
-    </form>
+  <header>
+    <div class="container-fluid pt-3">
+      <form>
+        <div id="bloodhound" class="form-group">
+          <input class="typeahead form-control" type="text" placeholder="Series Title">
+        </div>
+      </form>
+    </div>
+  </header>
+  <main role="main" class="container-fluid h-100">
     <div id="chart"></div>
   </main>
+  <footer class="footer">
+    <div class="container">
+      <span class="text-muted"></span>
+    </div>
+  </footer>
 
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha256-3edrmyuQ0w65f8gfBsqowzjJe2iM6n0nKciPUp8y+7E=" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>

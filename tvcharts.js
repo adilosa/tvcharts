@@ -1,5 +1,8 @@
 var chart = Highcharts.chart('chart', {
-    chart: { type: 'scatter' },
+    chart: {
+        type: 'scatter',
+        height: '600px'
+    },
     title: { text: '' },
     xAxis: {
         min: 0,
@@ -31,66 +34,87 @@ var chart = Highcharts.chart('chart', {
 
 $(document).ready(function() {
     s3 = new AWS.S3({apiVersion: '2006-03-01'});
+    withPrefix(
+        prefix => {
+            s3.makeUnauthenticatedRequest(
+                'listObjects',
+                { Bucket: "tvcharts", Prefix: prefix + "series_title_index/part" },
+                function(err, data) {
+                    if (err) console.log(err, err.stack);
+                    else {
+                        bloodhound = new Bloodhound({
+                            datumTokenizer: Bloodhound.tokenizers.obj.whitespace('title'),
+                            queryTokenizer: Bloodhound.tokenizers.whitespace,
+                            prefetch: {
+                                url: "https://s3-us-west-2.amazonaws.com/tvcharts/" + data["Contents"][0]["Key"],
+                                thumbprint: data["Contents"][0]["ETag"],
+                                transport: function (options, onSuccess, onError) {
+                                    var xhr = new XMLHttpRequest();
+                                    xhr.onload = function(e) {
+                                        if (this.status == 200) {
+                                            onSuccess(
+                                                xhr.responseText
+                                                    .split("\n")
+                                                    .map(s => s.split(","))
+                                                    .map(s => { return { tconst: s[0], title: s[1] }})
+                                            );
+                                        }
+                                    }
+                                    xhr.open("GET", options['url'], true);
+                                    xhr.responseType = "text";
+                                    xhr.send()
+                                }
+                            }
+                        });
+                        $('#bloodhound .typeahead').typeahead(
+                            {
+                                hint: true,
+                                highlight: true,
+                                minLength: 1
+                            },
+                            {
+                                name: 'titles',
+                                displayKey: 'title',
+                                source: bloodhound.ttAdapter(),
+                                templates: {
+                                    empty: [
+                                        '<div class="empty-message">',
+                                            'unable to find any results that match the current query',
+                                        '</div>'
+                                    ].join('\n')
+                                }
+                            }
+                        ).bind('typeahead:select', function(ev, suggestion) {
+                            gotoSeries(suggestion['tconst']);
+                            $("#bloodhound .typeahead").typeahead('close');
+                        });
+                    }
+                }
+            );
+            window.onpopstate = function(event) {
+                loadSeries(event.state.tconst);
+            };
+            gotoSeries(new URLSearchParams(window.location.search).get("tconst"));
+        }
+    )
+});
+
+function withPrefix(f) {
     s3.makeUnauthenticatedRequest(
         'listObjects',
-        { Bucket: "tvcharts", Prefix: "output/20180127T052230/series_title_index/part" },
+        {Bucket: "tvcharts", Prefix: "output/", Delimiter: "/"},
         function(err, data) {
             if (err) console.log(err, err.stack);
             else {
-                bloodhound = new Bloodhound({
-                    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('title'),
-                    queryTokenizer: Bloodhound.tokenizers.whitespace,
-                    prefetch: {
-                        url: "https://s3-us-west-2.amazonaws.com/tvcharts/" + data["Contents"][0]["Key"],
-                        thumbprint: data["Contents"][0]["ETag"],
-                        transport: function (options, onSuccess, onError) {
-                            var xhr = new XMLHttpRequest();
-                            xhr.onload = function(e) {
-                                if (this.status == 200) {
-                                    onSuccess(
-                                        xhr.responseText
-                                            .split("\n")
-                                            .map(s => s.split(","))
-                                            .map(s => { return { tconst: s[0], title: s[1] }})
-                                    );
-                                }
-                            }
-                            xhr.open("GET", options['url'], true);
-                            xhr.responseType = "text";
-                            xhr.send()
-                        }
-                    }
-                });
-                $('#bloodhound .typeahead').typeahead(
-                    {
-                        hint: true,
-                        highlight: true,
-                        minLength: 1
-                    },
-                    {
-                        name: 'titles',
-                        displayKey: 'title',
-                        source: bloodhound.ttAdapter(),
-                        templates: {
-                            empty: [
-                                '<div class="empty-message">',
-                                    'unable to find any results that match the current query',
-                                '</div>'
-                            ].join('\n')
-                        }
-                    }
-                ).bind('typeahead:select', function(ev, suggestion) {
-                    gotoSeries(suggestion['tconst']);
-                    $("#bloodhound .typeahead").typeahead('close');
-                });
+                return f(
+                    data["CommonPrefixes"]
+                        .map(x => x.Prefix)
+                        .reduce(function(a,b) { return a > b ? a : b; })
+                );
             }
         }
     );
-    window.onpopstate = function(event) {
-        loadSeries(event.state.tconst);
-    };
-    gotoSeries(new URLSearchParams(window.location.search).get("tconst"));
-});
+}
 
 function gotoSeries(tconst) {
     history.pushState({tconst: tconst}, "", "index.html?tconst=" + tconst);
@@ -99,27 +123,29 @@ function gotoSeries(tconst) {
 
 function loadSeries(tconst) {
     chart.showLoading();
-    s3.makeUnauthenticatedRequest(
-        'listObjects',
-        { Bucket: "tvcharts", Prefix: "output/20180127T052230/series_ratings/part=" + tconst.substring(2,5) },
-        function(err, data) {
-            if (err) console.log(err, err.stack);
-            else {
-                var xhr = new XMLHttpRequest();
-                xhr.onload = function(e) {
-                    if (this.status == 200) {
-                        series = pako.inflate(
-                            new Uint8Array(xhr.response), { to: "string"}
-                        ).trim().split(/\n/).map(JSON.parse).find(r => r["tconst"] == tconst)
-                        series['episodes'] = series['episodes'].sort((a, b) => a[12] - b[12] || a[13] - b[13]);
-                        plotChart(series);
+    withPrefix(
+        prefix => s3.makeUnauthenticatedRequest(
+            'listObjects',
+            { Bucket: "tvcharts", Prefix: prefix + "series_ratings/part=" + tconst.substring(2,5) },
+            function(err, data) {
+                if (err) console.log(err, err.stack);
+                else {
+                    var xhr = new XMLHttpRequest();
+                    xhr.onload = function(e) {
+                        if (this.status == 200) {
+                            series = pako.inflate(
+                                new Uint8Array(xhr.response), { to: "string"}
+                            ).trim().split(/\n/).map(JSON.parse).find(r => r["tconst"] == tconst)
+                            series['episodes'] = series['episodes'].sort((a, b) => a[12] - b[12] || a[13] - b[13]);
+                            plotChart(series);
+                        }
                     }
+                    xhr.open("GET", "https://s3-us-west-2.amazonaws.com/tvcharts/" + data["Contents"][0]["Key"], true);
+                    xhr.responseType = "arraybuffer";
+                    xhr.send()
                 }
-                xhr.open("GET", "https://s3-us-west-2.amazonaws.com/tvcharts/" + data["Contents"][0]["Key"], true);
-                xhr.responseType = "arraybuffer";
-                xhr.send()
             }
-        }
+        )
     );
 }
 
