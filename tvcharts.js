@@ -94,7 +94,7 @@ $(document).ready(function() {
             window.onpopstate = function(event) {
                 loadSeries(event.state.tconst);
             };
-            gotoSeries(new URLSearchParams(window.location.search).get("tconst"));
+            gotoSeries(new URLSearchParams(window.location.search).get("tconst") || "tt0944947");
         }
     )
 });
@@ -151,6 +151,7 @@ function loadSeries(tconst) {
 
 function plotChart(series) {
     chart.hideLoading();
+    document.title = series['series'][3] + " - TVCharts";
     chart.setTitle(
         {text: '<a href="https://www.imdb.com/title/' + series['series'][0] + '" target="_blank">' + series['series'][3] + '</a>'},
         {text: "<pre>" + series['series'][9] + "/10.0 " + parseInt(series['series'][10]).toLocaleString() + "</pre>"}
