@@ -94,7 +94,7 @@ $(document).ready(function() {
             window.onpopstate = function(event) {
                 loadSeries(event.state.tconst);
             };
-            gotoSeries(new URLSearchParams(window.location.search).get("tconst") || "tt0944947");
+            gotoSeries(new URLSearchParams(window.location.search).get("tconst"));
         }
     )
 });
@@ -122,6 +122,7 @@ function gotoSeries(tconst) {
 }
 
 function loadSeries(tconst) {
+    tconst = (tconst == "null" || tconst == null) ? "tt0944947" : tconst;
     chart.showLoading();
     withPrefix(
         prefix => s3.makeUnauthenticatedRequest(
