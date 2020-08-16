@@ -1,144 +1,171 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-
-  <link rel="shortcut icon" href="about:blank">
-  <title>TVCharts</title>
-  <style>
-  html {
-    position: relative;
-    min-height: 100%;
-  }
-
-  body {
-    background: #212529;
-    margin-bottom: 60px;
-  }
-
-  .footer {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    /* Set the fixed height of the footer here */
-    height: 60px;
-    line-height: 60px; /* Vertically center the text there */
-  }
-
-  span.twitter-typeahead .tt-menu {
-    cursor: pointer;
-  }
-
-  .dropdown-menu, span.twitter-typeahead .tt-menu {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    z-index: 1000;
-    display: none;
-    float: left;
-    min-width: 160px;
-    padding: 5px 0;
-    margin: 2px 0 0;
-    font-size: 1rem;
-    color: #373a3c;
-    text-align: left;
-    list-style: none;
-    background-color: #fff;
-    background-clip: padding-box;
-    border: 1px solid rgba(0, 0, 0, 0.15);
-    border-radius: 0.25rem;
-  }
-
-  span.twitter-typeahead .tt-suggestion {
-    display: block;
-    width: 100%;
-    padding: 3px 20px;
-    clear: both;
-    font-weight: normal;
-    line-height: 1.5;
-    color: #373a3c;
-    text-align: inherit;
-    white-space: nowrap;
-    background: none;
-    border: 0;
-  }
-
-  span.twitter-typeahead .tt-suggestion:focus, .dropdown-item:hover, span.twitter-typeahead .tt-suggestion:hover {
-    color: #2b2d2f;
-    text-decoration: none;
-    background-color: #f5f5f5;
-  }
-
-  span.twitter-typeahead .active.tt-suggestion, span.twitter-typeahead .tt-suggestion.tt-cursor, span.twitter-typeahead .active.tt-suggestion:focus, span.twitter-typeahead .tt-suggestion.tt-cursor:focus, span.twitter-typeahead .active.tt-suggestion:hover, span.twitter-typeahead .tt-suggestion.tt-cursor:hover {
-    color: #fff;
-    text-decoration: none;
-    background-color: #0275d8;
-    outline: 0;
-  }
-
-  span.twitter-typeahead .disabled.tt-suggestion, span.twitter-typeahead .disabled.tt-suggestion:focus, span.twitter-typeahead .disabled.tt-suggestion:hover {
-    color: #818a91;
-  }
-
-  span.twitter-typeahead .disabled.tt-suggestion:focus, span.twitter-typeahead .disabled.tt-suggestion:hover {
-    text-decoration: none;
-    cursor: not-allowed;
-    background-color: transparent;
-    background-image: none;
-  }
-
-  span.twitter-typeahead {
-    width: 100%;
-  }
-
-  .input-group span.twitter-typeahead {
-    display: block !important;
-  }
-
-  .input-group span.twitter-typeahead .tt-menu {
-    top: 2.375rem !important;
-  }
-
-  #bloodhound .tt-menu {
-    max-height: 200px;
-    overflow-y: auto;
-  }
-
-  #chart {
-    height: 100%;
-  }
-</style>
-</head>
-<body class="text-center">
-  <header>
-    <div class="container-fluid pt-3">
-      <form>
-        <div id="bloodhound" class="form-group">
-          <input class="typeahead form-control" type="text" placeholder="Series Title">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css"
+      integrity="sha384-r4NyP46KrjDleawBgD5tp8Y7UzmLA05oM1iAEQ17CSuDqnUK2+k9luXQOfXJCJ4I"
+      crossorigin="anonymous"
+    />
+    <link rel="shortcut icon" href="about:blank" />
+    <title>TVCharts</title>
+    <script src="https://tvcharts.s3-us-west-2.amazonaws.com/data.json"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
+  </head>
+  <body class="text-center">
+    <div id="app">
+      <div class="container">
+        <div class="row mt-4">
+          <div class="col-sm">
+            <h1>tvcharts</h1>
+          </div>
         </div>
-      </form>
+        <div class="row mt-2 mb-5">
+          <div class="col-sm">
+            <div class="btn-group" role="group" aria-label="Basic example">
+              <button
+                type="button"
+                :class="{btn: true, 'btn-secondary': true, active: sortMode == 'new'}"
+                v-on:click="sortMode = 'new'"
+              >
+                New
+              </button>
+              <button
+                type="button"
+                :class="{btn: true, 'btn-secondary': true, active: sortMode == 'fresh'}"
+                v-on:click="sortMode = 'fresh'"
+              >
+                Fresh
+              </button>
+              <button
+                type="button"
+                :class="{btn: true, 'btn-secondary': true, active: sortMode == 'best'}"
+                v-on:click="sortMode = 'best'"
+              >
+                Best
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="row row-cols-auto g-4">
+          <div class="col" v-for="s in filteredSeries" :key="s.tconst">
+            <a
+              :href="'https://imdb.com/title/' + s.tconst"
+              target="_blank"
+              style="color: inherit; text-decoration: none;"
+            >
+              <div class="card h-100" style="width: 185px;">
+                <img
+                  :src="'https://image.tmdb.org/t/p/w185' + s.poster"
+                  width="185px"
+                  class="card-img-top"
+                />
+                <div class="card-body">
+                  <p class="card-text">
+                    <span :style="'color:' + colorRating(s)">&#x25CF;</span>
+                    {{ s.primaryTitle }}
+                  </p>
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
-  </header>
-  <main role="main" class="container-fluid h-100">
-    <div id="chart"></div>
-  </main>
-  <footer class="footer">
-    <div class="container">
-      <span class="text-muted"></span>
-    </div>
-  </footer>
-
-  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha256-3edrmyuQ0w65f8gfBsqowzjJe2iM6n0nKciPUp8y+7E=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/typeahead.bundle.min.js" integrity="sha256-RWiU4omUU7tQ2M3wmRQNW9UL50MB4CucbRPCbsQv+X0=" crossorigin="anonymous"></script>
-  <script src="aws-sdk-2.185.0.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.6/pako_inflate.min.js"></script>
-  <script src="https://code.highcharts.com/highcharts.js"></script>
-  <script src="dark-unica.js"></script>
-  <script src="tvcharts.js"></script>
-</body>
+    <script>
+      var app = new Vue({
+        el: "#app",
+        data: {
+          ...{
+            sortMode: "new",
+            filterGenres: [
+              "News",
+              "Game-Show",
+              "Talk-Show",
+              "Reality-TV",
+              "Sport",
+            ],
+            limit: undefined,
+          },
+          ...data,
+        },
+        methods: {
+          daysSince: function (date) {
+            return (this.today - new Date(date)) / 86400000;
+          },
+          freshScore: function (series) {
+            return series.score - this.daysSince(series.last_date) * 0.1;
+          },
+          newScore: function (series) {
+            return series.score - (this.daysSince(series.first_date) * 0.3) / 7;
+          },
+          colorRating: function (series) {
+            let score = series.score;
+            if (score > this.scoreQuantiles["85"]) {
+              return "green";
+            } else if (score > this.scoreQuantiles["60"]) {
+              return "lightgreen";
+            } else if (score > this.scoreQuantiles["50"]) {
+              return "yellow";
+            } else if (score > this.scoreQuantiles["40"]) {
+              return "orange";
+            } else {
+              return "red";
+            }
+          },
+        },
+        computed: {
+          today: function () {
+            return new Date();
+          },
+          bestSeries: function () {
+            return this.series.sort((a, b) => b.score - a.score);
+          },
+          freshSeries: function () {
+            return this.series.sort(
+              (a, b) => this.freshScore(b) - this.freshScore(a)
+            );
+          },
+          newSeries: function () {
+            return this.series.sort(
+              (a, b) => this.newScore(b) - this.newScore(a)
+            );
+          },
+          sortedSeries: function () {
+            return this.sortMode === "best"
+              ? this.bestSeries
+              : this.sortMode === "fresh"
+              ? this.freshSeries
+              : this.sortMode === "new"
+              ? this.newSeries
+              : this.series;
+          },
+          filteredSeries: function () {
+            return this.sortedSeries
+              .filter((s) => !!s.poster)
+              .filter(
+                (s) => !this.filterGenres.some((g) => s.genres.includes(g))
+              )
+              .filter((s) => s.score > this.scoreQuantiles["50"])
+              .slice(0, this.limit);
+          },
+        },
+      });
+    </script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+      integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/js/bootstrap.min.js"
+      integrity="sha384-oesi62hOLfzrys4LxRF63OJCXdXDipiYWBnvTl9Y9/TRlw5xlKIEHpNyvvDShgf/"
+      crossorigin="anonymous"
+    ></script>
+  </body>
 </html>
