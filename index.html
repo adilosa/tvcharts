@@ -25,30 +25,45 @@
             <h1>tvcharts</h1>
           </div>
         </div>
-        <div class="row mt-2 mb-5">
-          <div class="col-sm">
-            <div class="btn-group" role="group" aria-label="Basic example">
-              <button
-                type="button"
-                :class="{btn: true, 'btn-secondary': true, active: sortMode == 'new'}"
-                v-on:click="sortMode = 'new'"
+        <div class="row mt-2 mb-5 flex justify-content-center">
+          <div class="col-2">
+            <div class="input-group">
+              <div class="btn-group" role="group" aria-label="Basic example">
+                <button
+                  type="button"
+                  :class="{btn: true, 'btn-secondary': true, active: sortMode == 'new'}"
+                  v-on:click="sortMode = 'new'"
+                >
+                  New
+                </button>
+                <button
+                  type="button"
+                  :class="{btn: true, 'btn-secondary': true, active: sortMode == 'fresh'}"
+                  v-on:click="sortMode = 'fresh'"
+                >
+                  Fresh
+                </button>
+                <button
+                  type="button"
+                  :class="{btn: true, 'btn-secondary': true, active: sortMode == 'best'}"
+                  v-on:click="sortMode = 'best'"
+                >
+                  Best
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-2">
+            <div class="form-check form-switch ml-4 align-middle pt-2">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                v-model="onlyGreen"
+                id="flexSwitchCheckDefault"
+              />
+              <label class="ml-1 form-check-label" for="flexSwitchCheckDefault"
+                >Only Green</label
               >
-                New
-              </button>
-              <button
-                type="button"
-                :class="{btn: true, 'btn-secondary': true, active: sortMode == 'fresh'}"
-                v-on:click="sortMode = 'fresh'"
-              >
-                Fresh
-              </button>
-              <button
-                type="button"
-                :class="{btn: true, 'btn-secondary': true, active: sortMode == 'best'}"
-                v-on:click="sortMode = 'best'"
-              >
-                Best
-              </button>
             </div>
           </div>
         </div>
@@ -91,6 +106,7 @@
               "Sport",
             ],
             limit: undefined,
+            onlyGreen: true,
           },
           ...data,
         },
@@ -105,15 +121,13 @@
             return series.score - (this.daysSince(series.first_date) * 0.3) / 7;
           },
           colorRating: function (series) {
-            let score = series.score;
-            if (score > this.scoreQuantiles["85"]) {
+            let score = (series.score || 0).toFixed(1);
+            if (score >= this.scoreQuantiles["85"].toFixed(1)) {
               return "green";
-            } else if (score > this.scoreQuantiles["60"]) {
+            } else if (score >= this.scoreQuantiles["65"].toFixed(1)) {
               return "lightgreen";
-            } else if (score > this.scoreQuantiles["50"]) {
+            } else if (score >= this.scoreQuantiles["40"].toFixed(1)) {
               return "yellow";
-            } else if (score > this.scoreQuantiles["40"]) {
-              return "orange";
             } else {
               return "red";
             }
@@ -147,11 +161,16 @@
           },
           filteredSeries: function () {
             return this.sortedSeries
-              .filter((s) => !!s.poster)
+              .filter((s) => !!s.poster && !!s.score)
               .filter(
                 (s) => !this.filterGenres.some((g) => s.genres.includes(g))
               )
-              .filter((s) => s.score > this.scoreQuantiles["50"])
+              .filter(
+                (s) =>
+                  !this.onlyGreen ||
+                  (s.score || 0).toFixed(1) >=
+                    this.scoreQuantiles["65"].toFixed(1)
+              )
               .slice(0, this.limit);
           },
         },
